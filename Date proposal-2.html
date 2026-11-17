@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Date proposal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700&display=swap">
+<style>
+:root{--bg:#fbf1ec;--card:#fffaf7;--ink:#4d1f2e;--soft:#8a6470;--pink:#f2a7b8;--pinkink:#4d1f2e;--lav:#e6dcf3;--line:#f0d9df;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#241319;--card:#321b24;--ink:#fbe6ec;--soft:#c7a1ae;--pink:#d9758d;--pinkink:#2a0f19;--lav:#4a3a5c;--line:#4d2d3a}}
+:root[data-theme="dark"]{--bg:#241319;--card:#321b24;--ink:#fbe6ec;--soft:#c7a1ae;--pink:#d9758d;--pinkink:#2a0f19;--lav:#4a3a5c;--line:#4d2d3a}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Nunito",system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;overflow-x:hidden}
+#app{width:min(92vw,440px);padding:24px 0;position:relative;z-index:1}
+.card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:28px;padding:32px 24px 28px;text-align:center;box-shadow:0 18px 40px -22px rgba(120,40,70,.35)}
+.card.in{animation:pop .35s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+h1{font-family:"Baloo 2",system-ui,sans-serif;font-weight:800;font-size:clamp(1.6rem,6.5vw,2.1rem);line-height:1.15;margin:18px 0 8px}
+h1.caps{text-transform:uppercase;letter-spacing:.01em}
+p{margin:0 0 6px;color:var(--soft)}
+.pic{width:96px;height:96px;margin:0 auto;border-radius:24px;background:var(--lav);display:grid;place-items:center;font-size:3.2rem;overflow:hidden}
+.pic.round{border-radius:50%}
+.pic img,.pic svg{width:100%;height:100%;object-fit:cover}
+.btns{display:flex;gap:14px;justify-content:center;align-items:center;margin-top:22px;min-height:64px}
+.btn{font:700 1rem "Baloo 2",system-ui,sans-serif;border:0;border-radius:999px;padding:12px 26px;cursor:pointer;background:var(--pink);color:var(--pinkink);transition:transform .2s ease,opacity .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn.no{background:var(--lav);color:var(--ink);position:relative;touch-action:manipulation}
+.btn.wide{width:100%;margin-top:18px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+label{display:block;text-align:left;font-weight:700;font-size:.9rem;margin:16px 0 6px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:12px 14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.food{background:var(--lav);border:2px solid transparent;border-radius:20px;padding:14px 4px;font:700 .85rem "Nunito",sans-serif;color:var(--ink);cursor:pointer;display:grid;gap:4px;place-items:center}
+.food span{font-size:1.7rem;line-height:1}.food svg{width:34px;height:34px;display:block}
+.food[aria-pressed="true"]{border-color:var(--pink);background:var(--card)}
+.sum{background:var(--lav);border-radius:18px;padding:12px 14px;margin:16px 0 0;color:var(--ink);font-weight:700}
+.ps{font-style:italic;font-size:.9rem;margin-top:16px}
+a.btn{display:inline-block;text-decoration:none;margin-top:16px}
+.pic svg{animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+.blink{transform-box:fill-box;transform-origin:center;animation:blink 4.5s infinite}
+@keyframes blink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+.stk{position:absolute;font-size:2.4rem;line-height:1;pointer-events:none;transform-origin:50% 80%;animation:wig 2.6s ease-in-out infinite}
+.s0{top:-20px;left:-8px}
+.s1{bottom:-18px;right:-6px;animation-delay:-1.3s}
+@keyframes wig{0%,100%{transform:rotate(-10deg) scale(1)}50%{transform:rotate(10deg) scale(1.12)}}
+.petals{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.petals i{position:absolute;top:-8vh;font-style:normal;opacity:.55;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(115vh) rotate(300deg)}}
+@media (prefers-reduced-motion:reduce){.petals{display:none}.card.in,.pic svg,.blink,.stk{animation:none}.btn{transition:none}}
+</style>
+</head>
+<body>
+<div class="petals" id="petals" aria-hidden="true"></div>
+<main id="app"></main>
+<script>
+// ---- Customize here ----
+const CONFIG = {
+  // Cartoon cats show on each screen. To use a real photo instead, paste an image
+  // as a data: URI in "photo" (external image links are blocked on published pages).
+  photo: { ask: "", yay: "", done: "" },
+  // Optional: a phone number (e.g. "+911234567890") or email. If set, the last
+  // screen shows a button that opens a pre-written message back to you.
+  contact: ""
+};
+const RAS = '<svg viewBox="0 0 40 40" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 21 H36 Q35 35 20 35 Q5 35 4 21Z" fill="#e58aa0"/><ellipse cx="20" cy="21" rx="16" ry="4" fill="#f6dca0"/><circle cx="13" cy="17" r="6.5" fill="#fff"/><circle cx="27" cy="17" r="6.5" fill="#fff"/><circle cx="20" cy="12" r="6.5" fill="#fff"/></g></svg>';
+const CAN = '<svg viewBox="0 0 40 40" aria-hidden="true"><g stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><rect x="12" y="6" width="16" height="29" rx="3" fill="#46c2d6"/><rect x="14" y="3" width="12" height="4" rx="1.5" fill="#cfd4dc"/><path d="M12 11 H28 M12 30 H28" fill="none"/><path d="M22 14 17 22 H22 L18 30" fill="none" stroke="#ffd23f" stroke-width="2.5"/></g></svg>';
+const FOODS = [["🫓","Benne masala dosa"],["🍚","Curd rice"],["🍲","Bisi bele bhat"],["🍉","Watermelon juice"],[RAS,"Rasgulla"],[CAN,"Energy drinks"]];
+const TIMES = [["2:00 PM","lunch that turns into dinner"],["3:00 PM","snacks first, no questions"],["4:00 PM","golden hour, good lighting"],["5:00 PM","early bird, I respect it"],["6:00 PM","the right answer, honestly"],["7:00 PM","you’re making me hungry already"]];
+const NO_TEXT = ["no… 🙈","you sure?","are you really?","think again 🥺","nope, can’t click me","last chance!","okay that’s just rude"];
+
+const app = document.getElementById("app");
+const S = { date: "", time: "", food: "" };
+const G = '<g stroke="#4d1f2e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">';
+const EARS = c => `<path d="M16 44 22 12 44 28Z M84 44 78 12 56 28Z" fill="${c}"/><path d="M24 36 26 21 36 29Z M76 36 74 21 64 29Z" fill="#f7c3cf" stroke="none"/><ellipse cx="50" cy="58" rx="36" ry="32" fill="${c}"/>`;
+const CATS = {
+  // pleading orange cat
+  ask: `<svg viewBox="0 0 100 100" aria-hidden="true">${G}${EARS("#f3b27a")}<g class="blink"><circle cx="36" cy="54" r="11" fill="#4d1f2e"/><circle cx="64" cy="54" r="11" fill="#4d1f2e"/><circle cx="32" cy="50" r="4" fill="#fff" stroke="none"/><circle cx="60" cy="50" r="4" fill="#fff" stroke="none"/><circle cx="39" cy="58" r="2" fill="#fff" stroke="none"/><circle cx="67" cy="58" r="2" fill="#fff" stroke="none"/></g><path d="M46 68 54 68 50 73Z" fill="#e58aa0"/><path d="M50 73 V76 M50 76 Q44 82 40 77 M50 76 Q56 82 60 77" fill="none"/><path d="M14 66 28 68 M14 74 28 72 M86 66 72 68 M86 74 72 72" fill="none" stroke-width="2"/></g></svg>`,
+  // shocked grey cat
+  yay: `<svg viewBox="0 0 100 100" aria-hidden="true">${G}${EARS("#b9bdcc")}<g class="blink"><circle cx="35" cy="52" r="12" fill="#fff"/><circle cx="65" cy="52" r="12" fill="#fff"/><circle cx="35" cy="52" r="2.5" fill="#4d1f2e"/><circle cx="65" cy="52" r="2.5" fill="#4d1f2e"/></g><path d="M26 36 Q35 30 44 35 M56 35 Q65 30 74 36" fill="none"/><path d="M47 64 53 64 50 68Z" fill="#e58aa0"/><ellipse cx="50" cy="77" rx="6" ry="8" fill="#4d1f2e"/><path d="M14 64 26 66 M86 64 74 66" fill="none" stroke-width="2"/></g></svg>`,
+  // smug cat in sunglasses
+  done: `<svg viewBox="0 0 100 100" aria-hidden="true">${G}${EARS("#f6efe6")}<rect x="24" y="46" width="23" height="15" rx="5" fill="#4d1f2e"/><rect x="53" y="46" width="23" height="15" rx="5" fill="#4d1f2e"/><path d="M47 51 H53" fill="none"/><path d="M29 51 33 51 M58 51 62 51" stroke="#fff" stroke-width="2" fill="none"/><path d="M46 66 54 66 50 70Z" fill="#e58aa0"/><path d="M42 77 Q50 81 58 75 L61 72" fill="none"/><path d="M14 66 26 68 M86 66 74 68" fill="none" stroke-width="2"/></g></svg>`
+};
+const pic = (k, round) => `<div class="pic${round ? " round" : ""}">${CONFIG.photo[k] ? `<img src="${CONFIG.photo[k]}" alt="">` : CATS[k]}</div>`;
+const STK = [["😻","🐱"],["🙀","😹"],["😺","🐾"],["😋","🐱"],["😽","💞"]];
+let step = 0;
+function show(html) {
+  app.innerHTML = html;
+  const c = app.firstElementChild;
+  c.classList.add("in");
+  (STK[step++] || []).forEach((s, i) => {
+    const e = document.createElement("span");
+    e.className = "stk s" + i; e.textContent = s; e.setAttribute("aria-hidden", "true");
+    c.appendChild(e);
+  });
+}
+
+function ask() {
+  show(`<section class="card">${pic("ask")}
+    <h1>🌸 Maryammm, will you go out with me? 🌸</h1>
+    <div class="btns"><button class="btn" id="yes">YES 💖</button><button class="btn no" id="no">no… 🙈</button></div></section>`);
+  const yes = document.getElementById("yes"), no = document.getElementById("no");
+  let n = 0, ox = 0, oy = 0;
+  const dodge = e => {
+    if (e) e.preventDefault();
+    n++;
+    no.textContent = NO_TEXT[n % NO_TEXT.length];
+    yes.style.transform = `scale(${Math.min(1 + n * 0.08, 1.6)})`;
+    const r = no.getBoundingClientRect(), m = 12;
+    const bx = r.left - ox, by = r.top - oy; // resting position
+    let nx = (Math.random() * 2 - 1) * 130, ny = (Math.random() * 2 - 1) * 90;
+    nx = Math.max(m - bx, Math.min(innerWidth - r.width - m - bx, nx));
+    ny = Math.max(m - by, Math.min(innerHeight - r.height - m - by, ny));
+    ox = nx; oy = ny;
+    no.style.transform = `translate(${nx}px,${ny}px)`;
+  };
+  no.addEventListener("pointerenter", dodge);
+  no.addEventListener("pointerdown", dodge);
+  no.addEventListener("click", e => e.preventDefault());
+  yes.addEventListener("click", yay);
+}
+
+function yay() {
+  show(`<section class="card">${pic("yay")}
+    <h1 class="caps">Wait, you actually said yes?? 😭</h1>
+    <p>I was so ready for you to say no 🥹</p>
+    <button class="btn wide" id="go">okay okay!</button></section>`);
+  document.getElementById("go").addEventListener("click", pickDate);
+}
+
+function pickDate() {
+  show(`<section class="card"><div style="font-size:2.2rem">🗓️🐾</div>
+    <h1>So… when are you free?</h1>
+    <label for="d">Pick a day ✨</label><input type="date" id="d" value="${S.date}">
+    <label for="t">What time? ⏰</label>
+    <select id="t"><option value="">Select a time…</option>${TIMES.map(([t, j]) => `<option value="${t}"${S.time === t ? " selected" : ""}>${t} — ${j}</option>`).join("")}</select>
+    <button class="btn wide" id="next" disabled>set the date!</button></section>`);
+  const d = document.getElementById("d"), t = document.getElementById("t"), b = document.getElementById("next");
+  d.min = new Date().toISOString().slice(0, 10);
+  const check = () => { S.date = d.value; S.time = t.value; b.disabled = !(S.date && S.time); };
+  d.addEventListener("input", check); t.addEventListener("input", check); check();
+  b.addEventListener("click", pickFood);
+}
+
+function pickFood() {
+  show(`<section class="card"><h1>What are we feeling? 🍽️✨</h1>
+    <div class="grid">${FOODS.map(([e, n]) => `<button class="food" aria-pressed="${S.food === n}" data-f="${n}"><span>${e}</span>${n}</button>`).join("")}</div>
+    <button class="btn wide" id="next" disabled>this one</button></section>`);
+  const b = document.getElementById("next"), items = app.querySelectorAll(".food");
+  b.disabled = !S.food;
+  items.forEach(el => el.addEventListener("click", () => {
+    S.food = el.dataset.f;
+    items.forEach(x => x.setAttribute("aria-pressed", x === el));
+    b.disabled = false;
+  }));
+  b.addEventListener("click", done);
+}
+
+function done() {
+  const day = new Date(S.date + "T00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  const msg = `I said yes! ${day} at ${S.time}, ${S.food}. See you then 💖`;
+  const c = CONFIG.contact.trim();
+  const link = !c ? "" : c.includes("@")
+    ? `<a class="btn" href="mailto:${c}?subject=${encodeURIComponent("Our date")}&body=${encodeURIComponent(msg)}">Send the confirmation</a>`
+    : `<a class="btn" href="sms:${c}?&body=${encodeURIComponent(msg)}">Send the confirmation</a>`;
+  show(`<section class="card">${pic("done")}
+    <h1>glad you didn’t say no. be ready by ${S.time.replace(":00", "")}, I’m coming to get you 🚗</h1>
+    <div class="sum">${day} · ${S.time} · ${S.food}</div>
+    <p class="ps">P.S. normal people text. I made a website. no big deal.</p>${link}
+    <div style="margin-top:14px">💗 💗</div></section>`);
+}
+
+const pe = document.getElementById("petals");
+for (let i = 0; i < 14; i++) {
+  const p = document.createElement("i");
+  p.textContent = "🌸";
+  p.style.cssText = `left:${Math.random() * 100}vw;font-size:${12 + Math.random() * 14}px;animation-duration:${14 + Math.random() * 14}s;animation-delay:${-Math.random() * 20}s`;
+  pe.appendChild(p);
+}
+ask();
+</script>
+</body>
+</html>
